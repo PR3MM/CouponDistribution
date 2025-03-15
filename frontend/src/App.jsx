@@ -11,57 +11,46 @@ function App() {
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  // Effect for countdown timer
   useEffect(() => {
-    // Check if there's a stored expiration time
     const cooldownExpires = localStorage.getItem('couponCooldownExpires');
     
-    // Only start the timer if there's an expiration time
     if (cooldownExpires) {
-      // Calculate initial countdown display
       const now = Date.now();
       const timeLeft = parseInt(cooldownExpires) - now;
       
-      // If the timer has already expired, clear it
       if (timeLeft <= 0) {
         setCooldownRemaining(null);
         localStorage.removeItem('couponCooldownExpires');
         return;
       }
       
-      // Calculate and set initial countdown
       const minutes = Math.floor(timeLeft / 60000);
       const seconds = Math.floor((timeLeft % 60000) / 1000);
       setCooldownRemaining(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
-      setLocked(true); // Lock UI when on cooldown
+      setLocked(true); 
       
-      // Set up an interval to update the countdown
       const interval = setInterval(() => {
         const now = Date.now();
         const timeLeft = parseInt(cooldownExpires) - now;
         
         if (timeLeft > 0) {
-          // Calculate minutes and seconds
           const minutes = Math.floor(timeLeft / 60000);
           const seconds = Math.floor((timeLeft % 60000) / 1000);
           setCooldownRemaining(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
         } else {
-          // Cooldown expired
           setCooldownRemaining(null);
           localStorage.removeItem('couponCooldownExpires');
-          setLocked(false); // Unlock UI when cooldown ends
+          setLocked(false);
           clearInterval(interval);
         }
       }, 1000);
       
       return () => clearInterval(interval);
     } else {
-      // No cooldown set
       setCooldownRemaining(null);
     }
   }, []);
 
-  // Fetch coupons on component mount
   useEffect(() => {
     fetchCoupons();
   }, []);
@@ -79,8 +68,8 @@ function App() {
   };
 
   const handleClaimCoupon = (couponId) => {
-    setLocked(true); // Lock the UI during the request
-    setMessage(""); // Clear any previous messages
+    setLocked(true); 
+    setMessage(""); 
     
     axios
       .post(
@@ -92,29 +81,22 @@ function App() {
         }
       )
       .then((response) => {
-        // Update the coupon state to reflect the claimed status
         setCoupons(coupons.map(coupon => 
           coupon._id === couponId ? { ...coupon, claimed: true } : coupon
         ));
         
-        // Set cooldown expiration time in localStorage (1 hour from now)
-        const expirationTime = Date.now() + 3600000; // 1 hour in milliseconds
+        const expirationTime = Date.now() + 3600000; 
         localStorage.setItem('couponCooldownExpires', expirationTime);
         
-        // Show success message with coupon code
         setMessage(`🎉 Coupon successfully redeemed`);
         
-        // Keep UI locked during cooldown
-        // Will be unlocked when cooldown ends via the useEffect
       })
       .catch((error) => {
         console.error(error.response?.data || "Error claiming coupon");
         
-        // Check if the error response contains a time restriction
         if (error.response?.data?.error && error.response?.data?.error.includes("minutes")) {
           setMessage(`❌ ${error.response.data.error}`);
           
-          // Also update the cooldown timer based on server response
           const minutesMatch = error.response.data.error.match(/(\d+)\s*minutes/);
           if (minutesMatch && minutesMatch[1]) {
             const remainingMinutes = parseInt(minutesMatch[1]);
@@ -125,25 +107,22 @@ function App() {
           setMessage(`❌ ${error.response?.data?.error || "Error claiming coupon"}`);
         }
         
-        setLocked(false); // Unlock the UI if there's an error that's not cooldown related
+        setLocked(false); 
       });
   };
   
   const handleReset = () => {
-    // Reset local state
     localStorage.removeItem('couponCooldownExpires');
     setCooldownRemaining(null);
     setLocked(false);
     setMessage("");
     setError("");
     
-    // Reset server state
     axios
       .post(`${API_BASE_URL}/reset-coupons`, {}, {
         withCredentials: true 
       })
       .then((response) => {
-        // Refresh the page to get everything in sync
         window.location.reload();
       })
       .catch((error) => {

@@ -66,39 +66,30 @@ router.get("/coupons", async (req, res) => {
 
 router.post("/reset-coupons", async (req, res) => {
     try {
-        // Reset all coupons by setting claimed to false
         const couponResult = await Coupon.updateMany({}, { $set: { claimed: false } });
         
-        // Delete all IP records
         const ipResult = await IPRecord.deleteMany({});
         
-        // Get the domain from the request
-        const domain = req.get('host').split(':')[0]; // Extracts domain without port
+        const domain = req.get('host').split(':')[0]; 
         
-        // Try multiple approaches to clear the cookie
         
-        // Approach 1: Match the original settings exactly
         res.clearCookie("coupon_claimed", {
             httpOnly: true,
             path: '/'
         });
         
-        // Approach 2: Try with domain explicitly set
         res.clearCookie("coupon_claimed", {
             httpOnly: true,
             path: '/',
             domain: domain === 'localhost' ? undefined : domain
         });
         
-        // Approach 3: Set expired cookie (most reliable approach)
         res.cookie("coupon_claimed", "", {
             httpOnly: true,
             path: '/',
             expires: new Date(1), // Set to past date
-            maxAge: -1 // Negative maxAge
+            maxAge: -1 
         });
-        
-        // Log what we're trying to do
         console.log(`Attempting to clear cookie on domain: ${domain}`);
         
         res.json({ 
