@@ -8,6 +8,9 @@ function App() {
   const [locked, setLocked] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(null);
 
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   // Effect for countdown timer
   useEffect(() => {
     // Check if there's a stored expiration time
@@ -65,7 +68,7 @@ function App() {
 
   const fetchCoupons = () => {
     axios
-      .get("http://localhost:5000/coupons", { withCredentials: true })
+      .get(`${API_BASE_URL}/coupons`, { withCredentials: true })
       .then((response) => {
         setCoupons(response.data.coupons || []);
       })
@@ -81,7 +84,7 @@ function App() {
     
     axios
       .post(
-        "http://localhost:5000/claim-coupon",
+        `${API_BASE_URL}/claim-coupon`,
         { couponId },
         { 
           headers: { "Content-Type": "application/json" },
@@ -136,7 +139,7 @@ function App() {
     
     // Reset server state
     axios
-      .post("http://localhost:5000/reset-coupons", {}, {
+      .post(`${API_BASE_URL}/reset-coupons`, {}, {
         withCredentials: true 
       })
       .then((response) => {

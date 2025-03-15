@@ -13,7 +13,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // app.use(cors());
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+const FRONTEND_URL_ = process.env.FRONTEND_URL || "https://coupon-distribution-five.vercel.app"; // Production URL for frontend
+
+app.use(cors({ origin: FRONTEND_URL_, credentials: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
